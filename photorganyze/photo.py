@@ -30,7 +30,10 @@ def store(path):
 
 
 def get_image_vars(path):
-    img_vars = dict(user=config.get('user', 'output'), ext=os.path.splitext(path)[-1].lower())
+    img_vars = dict(user=config.get('user', 'output'),
+                    ext=os.path.splitext(path)[-1].lower(),
+                    base=os.path.splitext(os.path.basename(path))[0])
+
     try:
         img = Image.open(path, mode='r')
     except OSError:
