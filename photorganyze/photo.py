@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
+import hashlib
 import json
 import os
 import re
 import shutil
 
 from PIL import ExifTags, Image
-import imagehash
 
 from photorganyze.lib import config
 from photorganyze.lib import util
@@ -14,11 +14,11 @@ from photorganyze.lib import util
 def store(path):
     print('|-', os.path.basename(path), end=' ')
 
-    img, img_vars = get_image_vars(path)
+    img_vars = get_image_vars(path)
     if img_vars is None:
         return
 
-    img_hash = get_image_hash(img)
+    img_hash = get_file_hash(path)
     img_exists = check_image_exists(img_hash, img_vars)
     if img_exists:
         return
@@ -39,13 +39,13 @@ def get_image_vars(path):
         img = Image.open(path, mode='r')
     except OSError:
         print('-> Not an image. Ignored')
-        return None, None
+        return None
 
     try:
         exif = {ExifTags.TAGS[k]: v for k, v in img._getexif().items() if k in ExifTags.TAGS}
     except AttributeError:
         print('-> No EXIF-data. Ignored')
-        return img, None
+        return None
 
     try:
         date = datetime.strptime(exif['DateTimeOriginal'], '%Y:%m:%d %H:%M:%S')
@@ -68,11 +68,29 @@ def get_image_vars(path):
     img_vars['base'] = get_original_image_name(path, date)
     img_vars['ext'] = image_format_map.get(img.format.lower(), img.format.lower())
 
-    return img, img_vars
+    return img_vars
 
 
-def get_image_hash(img):
-    return str(imagehash.average_hash(img)) + str(imagehash.dhash(img)) + str(imagehash.dhash_vertical(img))
+def get_file_hash(path):
+    """
+
+    http://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file
+    """
+    return hash_bytestr_iter(file_as_blockiter(open(path, mode='rb')), hashlib.sha256(), True)
+
+
+def hash_bytestr_iter(bytesiter, hasher, ashexstr=False):
+    for block in bytesiter:
+        hasher.update(block)
+    return hasher.hexdigest() if ashexstr else hasher.digest()
+
+
+def file_as_blockiter(fid, blocksize=65536):
+    with fid:
+        block = fid.read(blocksize)
+        while len(block) > 0:
+            yield block
+            block = fid.read(blocksize)
 
 
 def check_image_exists(img_hash, img_vars):

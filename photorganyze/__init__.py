@@ -8,7 +8,7 @@ from datetime import date
 #
 # See http://semver.org/ for info about Semantic Versioning. See PEP 440, https://www.python.org/dev/peps/pep-0440/ for
 # info about versioning of Python projects.
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 # Authors of the software
 __author__ = ', '.join(['Geir Arne Hjelle',
