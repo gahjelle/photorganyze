@@ -53,7 +53,10 @@ def get_image_vars(path):
         try:
             date = datetime.strptime(exif['DateTime'], '%Y:%m:%d %H:%M:%S')
         except (KeyError, ValueError):
-            date = datetime.now().replace(year=1900, month=1, day=1)
+            try:
+                date = get_date_from_filename(path)
+            except ValueError:
+                date = datetime.now().replace(year=1900, month=1, day=1)
     img_vars.update(get_date_vars(date))
     img_vars.update(get_date_vars(date + timedelta(hours=-5), '_'))
 
@@ -152,3 +155,11 @@ def get_original_image_name(path, date):
         return date.strftime('%H%M%S')
     else:
         return os.path.splitext(base_re.group())[0]
+
+def get_date_from_filename(path):
+    filename = os.path.splitext(os.path.basename(path))[0]
+
+    try:
+        return datetime.strptime(filename[-19:], '%Y-%m-%d %H.%M.%S')
+    except ValueError:
+        return datetime.strptime(filename[-17:], '%d-%m-%y %H %M %S')
