@@ -53,7 +53,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='photo', 'backup', 'archive'
+    keywords='photo backup archive',
 
     # Using find_packages to find all subpackages in photorganyze. This is
     # done explicitly because find_packages uses a VERY long time to
