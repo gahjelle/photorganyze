@@ -8,6 +8,7 @@ from PIL import ExifTags, Image
 import imagehash
 
 from photorganyze.lib import config
+from photorganyze.lib import util
 
 
 def store(path):
@@ -31,8 +32,8 @@ def store(path):
 
 
 def get_image_vars(path):
-    img_vars = dict(user=config.get('user', 'output'),
-                    ext=os.path.splitext(path)[-1].lower())
+    image_format_map = {'jpeg': 'jpg'}
+    img_vars = dict(user=util.get_option('--user') or config.get('user', 'output'))
 
     try:
         img = Image.open(path, mode='r')
@@ -48,10 +49,10 @@ def get_image_vars(path):
 
     try:
         date = datetime.strptime(exif['DateTimeOriginal'], '%Y:%m:%d %H:%M:%S')
-    except KeyError:
+    except (KeyError, ValueError):
         try:
             date = datetime.strptime(exif['DateTime'], '%Y:%m:%d %H:%M:%S')
-        except KeyError:
+        except (KeyError, ValueError):
             date = datetime.now().replace(year=1900, month=1, day=1)
     img_vars.update(get_date_vars(date))
     img_vars.update(get_date_vars(date + timedelta(hours=-5), '_'))
@@ -62,6 +63,7 @@ def get_image_vars(path):
         img_vars['model'] = img_vars['make'] + '_' + img_vars['model']
 
     img_vars['base'] = get_original_image_name(path, date)
+    img_vars['ext'] = image_format_map.get(img.format.lower(), img.format.lower())
 
     return img, img_vars
 
