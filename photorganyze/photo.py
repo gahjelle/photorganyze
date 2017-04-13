@@ -86,7 +86,7 @@ def check_image_exists(img_hash, img_vars):
 
 
 def get_output_path(img_vars):
-    ids = list('abcdefghijklmnopqrstuvwxyz')
+    ids = [''] + list('abcdefghijklmnopqrstuvwxyz')
     output_path = os.path.join(config.get_path('directory', 'output'), config.get('file_name', 'output'))
 
     while True:
