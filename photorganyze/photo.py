@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import json
 import os
+import re
 import shutil
 
 from PIL import ExifTags, Image
@@ -31,8 +32,7 @@ def store(path):
 
 def get_image_vars(path):
     img_vars = dict(user=config.get('user', 'output'),
-                    ext=os.path.splitext(path)[-1].lower(),
-                    base=os.path.splitext(os.path.basename(path))[0])
+                    ext=os.path.splitext(path)[-1].lower())
 
     try:
         img = Image.open(path, mode='r')
@@ -54,12 +54,14 @@ def get_image_vars(path):
         except KeyError:
             date = datetime.now().replace(year=1900, month=1, day=1)
     img_vars.update(get_date_vars(date))
-    img_vars.update(get_date_vars(date + timedelta(hours=-6), '_'))
+    img_vars.update(get_date_vars(date + timedelta(hours=-5), '_'))
 
     img_vars['make'] = convert_to_filename(exif.get('Make', 'Unknown').split()[0])
     img_vars['model'] = convert_to_filename(exif.get('Model', 'Unknown model'))
     if not img_vars['model'].startswith(img_vars['make'] + '_'):
         img_vars['model'] = img_vars['make'] + '_' + img_vars['model']
+
+    img_vars['base'] = get_original_image_name(path, date)
 
     return img, img_vars
 
@@ -139,3 +141,12 @@ def get_date_vars(date, suffix=''):
 
 def convert_to_filename(s):
     return s.lower().strip().replace(' ', '_').replace('\x00', '')
+
+
+def get_original_image_name(path, date):
+    base_re = re.search(r'(dsc|img|sam)_?\d{4}.jpe?g', path, flags=re.IGNORECASE)
+
+    if base_re is None:
+        return date.strftime('%H%M%S')
+    else:
+        return os.path.splitext(base_re.group())[0]
