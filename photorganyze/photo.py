@@ -44,8 +44,8 @@ def get_image_vars(path):
     try:
         exif = {ExifTags.TAGS[k]: v for k, v in img._getexif().items() if k in ExifTags.TAGS}
     except AttributeError:
-        print('-> No EXIF-data. Ignored')
-        raise AttributeError('No EXIF-data on {}'.format(path))
+        print('-> No EXIF-data.', end=' ')
+        exif = dict()
 
     try:
         date = datetime.strptime(exif['DateTimeOriginal'], '%Y:%m:%d %H:%M:%S')
