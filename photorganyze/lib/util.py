@@ -11,9 +11,13 @@ options including --help are done.
 # Standard library imports
 import atexit
 from datetime import datetime
+import logging
 import os.path
 import re
 import sys
+
+# Photorganyze imports
+from photorganyze.lib import config
 
 ## Start time of script, used when calculating run-time.
 _STARTTIME = datetime.now()
@@ -59,3 +63,14 @@ def get_option(key):
         return args[-1].split('=', maxsplit=1)[-1]
     else:
         return None
+
+def start_logging():
+    logger = logging.getLogger(get_program_name())
+    print(config.get_path('file_name', 'log'))
+    file_handler = logging.FileHandler(config.get_path('file_name', 'log'))
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logger.addHandler(file_handler)
+
+
+def get_logger():
+    return logging.getLogger(get_program_name())

@@ -6,6 +6,7 @@ import sys
 # Photorganyze imports
 from photorganyze.lib import config
 from photorganyze import photo
+from photorganyze.lib import util
 
 
 def organyze(*directories):
@@ -23,8 +24,11 @@ def organyze(*directories):
             if os.path.isdir(full_path):
                 organyze(full_path)
             else:
-                photo.store(full_path)
-
+                try:
+                    photo.store(full_path)
+                except Exception:
+                    print('-> ERROR')
+                    util.get_logger().exception('Error working with {}'.format(full_path))
 
 def _normalize_path(path):
     path = os.path.expanduser(path)
@@ -33,6 +37,7 @@ def _normalize_path(path):
 
 
 def main():
+    util.start_logging()
     args = [a for a in sys.argv[1:] if not a.startswith('-')]
     options = [o for o in sys.argv[1:] if o.startswith('-')]
 
