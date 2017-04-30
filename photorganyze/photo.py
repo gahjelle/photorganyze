@@ -42,7 +42,7 @@ def get_image_vars(path):
         return None
 
     try:
-        exif = {ExifTags.TAGS[k]: v for k, v in img._getexif().items() if k in ExifTags.TAGS}
+        exif = get_exif(img)
     except AttributeError:
         print('-> No EXIF-data.', end=' ')
         exif = dict()
@@ -119,6 +119,14 @@ def get_output_path(img_vars):
             break
 
     return path
+
+
+def get_exif(img):
+    exif = {ExifTags.TAGS[k]: v for k, v in img._getexif().items() if k in ExifTags.TAGS}
+    if 'GPSInfo' in exif:
+        exif.update({ExifTags.GPSTAGS[k]: v for k, v in exif['GPSInfo'].items() if k in ExifTags.GPSTAGS})
+
+    return exif
 
 
 def create_directories(output_path):
