@@ -5,7 +5,7 @@ import sys
 
 # Photorganyze imports
 from photorganyze.lib import config
-from photorganyze import photo
+from photorganyze import file
 from photorganyze.lib import util
 
 
@@ -25,10 +25,11 @@ def organyze(*directories):
                 organyze(full_path)
             else:
                 try:
-                    photo.store(full_path)
-                except Exception:
+                    file.store(full_path)
+                except StopIteration:
                     print('-> ERROR')
                     util.get_logger().exception('Error working with {}'.format(full_path))
+
 
 def _normalize_path(path):
     path = os.path.expanduser(path)

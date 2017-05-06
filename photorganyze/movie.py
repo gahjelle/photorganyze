@@ -12,61 +12,44 @@ from photorganyze.lib import util
 
 
 def store(path):
-    img_vars = get_image_vars(path)
-    if img_vars is None:
+    vid_vars = get_video_vars(path)
+    if vid_vars is None:
         return
 
-    img_hash = get_file_hash(path)
-    img_exists = check_image_exists(img_hash, img_vars)
-    if img_exists:
+    vid_hash = get_file_hash(path)
+    vid_exists = check_video_exists(vid_hash, vid_vars)
+    if vid_exists:
         return
 
-    output_path = get_output_path(img_vars)
+    output_path = get_output_path(vid_vars)
     print('->', output_path)
 
     create_directories(output_path)
-    save_image_file(path, output_path)
-    save_image_hash(img_hash, img_vars, output_path)
+    save_video_file(path, output_path)
+    save_video_hash(vid_hash, vid_vars, output_path)
 
 
-def get_image_vars(path):
-    image_format_map = {'jpeg': 'jpg'}
-    img_vars = dict(user=util.get_option('--user') or config.get('user', 'output'))
-
-    try:
-        img = Image.open(path, mode='r')
-    except OSError:
-        print('-> Not an image. Ignored')
-        return None
+def get_video_vars(path):
+    video_format_map = {}
+    vid_vars = dict(user=util.get_option('--user') or config.get('user', 'output'))
 
     try:
-        exif = get_exif(img)
-    except AttributeError:
-        print('-> No EXIF-data.', end=' ')
-        exif = dict()
-
-    try:
-        date = datetime.strptime(exif['DateTimeOriginal'], '%Y:%m:%d %H:%M:%S')
-    except (KeyError, ValueError):
+        date = get_date_from_filename(path)
+    except ValueError:
         try:
-            date = datetime.strptime(exif['DateTime'], '%Y:%m:%d %H:%M:%S')
-        except (KeyError, ValueError):
-            try:
-                date = get_date_from_filename(path)
-            except ValueError:
-                date = datetime.now().replace(year=1900, month=1, day=1)
-    img_vars.update(get_date_vars(date))
-    img_vars.update(get_date_vars(date + timedelta(hours=-5), '_'))
+            date = datetime.fromtimestamp(os.path.getctime(path))
+        except StopIteration:
+            date = datetime.now().replace(year=1900, month=1, day=1)
+    vid_vars.update(get_date_vars(date))
+    vid_vars.update(get_date_vars(date + timedelta(hours=-5), '_'))
 
-    img_vars['make'] = convert_to_filename(exif.get('Make', 'Unknown').split()[0])
-    img_vars['model'] = convert_to_filename(exif.get('Model', 'Unknown model'))
-    if not img_vars['model'].startswith(img_vars['make'] + '_'):
-        img_vars['model'] = img_vars['make'] + '_' + img_vars['model']
+    vid_vars['model'] = 'video'
 
-    img_vars['base'] = get_original_image_name(path, date)
-    img_vars['ext'] = image_format_map.get(img.format.lower(), img.format.lower())
+    vid_vars['base'] = get_original_video_name(path, date)
+    path_ext = path.rpartition('.')[-1]
+    vid_vars['ext'] = video_format_map.get(path_ext.lower(), path_ext.lower())
 
-    return img_vars
+    return vid_vars
 
 
 def get_file_hash(path):
@@ -91,61 +74,53 @@ def file_as_blockiter(fid, blocksize=65536):
             block = fid.read(blocksize)
 
 
-def check_image_exists(img_hash, img_vars):
+def check_video_exists(vid_hash, vid_vars):
     check_path = os.path.join(config.get_path('directory', 'output'), config.get('checksum_file', 'output'))
     try:
-        with open(check_path.format(**img_vars), mode='r') as fid:
-            img_hashes = json.load(fid)
+        with open(check_path.format(**vid_vars), mode='r') as fid:
+            vid_hashes = json.load(fid)
     except FileNotFoundError:
         return False
 
-    if img_hash in img_hashes:
-        print('-> Exists as {}'.format(img_hashes[img_hash]))
+    if vid_hash in vid_hashes:
+        print('-> Exists as {}'.format(vid_hashes[vid_hash]))
         return True
 
     return False
 
 
-def get_output_path(img_vars):
+def get_output_path(vid_vars):
     ids = [''] + list('abcdefghijklmnopqrstuvwxyz')
     output_path = os.path.join(config.get_path('directory', 'output'), config.get('file_name', 'output'))
 
     while True:
-        img_vars['id'] = ids.pop(0)
-        path = output_path.format(**img_vars)
+        vid_vars['id'] = ids.pop(0)
+        path = output_path.format(**vid_vars)
         if not os.path.exists(path):
             break
 
     return path
 
 
-def get_exif(img):
-    exif = {ExifTags.TAGS[k]: v for k, v in img._getexif().items() if k in ExifTags.TAGS}
-    if 'GPSInfo' in exif:
-        exif.update({ExifTags.GPSTAGS[k]: v for k, v in exif['GPSInfo'].items() if k in ExifTags.GPSTAGS})
-
-    return exif
-
-
 def create_directories(output_path):
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
 
-def save_image_file(input_path, output_path):
+def save_video_file(input_path, output_path):
     shutil.copy2(input_path, output_path)
 
 
-def save_image_hash(img_hash, img_vars, output_path):
+def save_video_hash(vid_hash, vid_vars, output_path):
     check_path = os.path.join(config.get_path('directory', 'output'), config.get('checksum_file', 'output'))
     try:
-        with open(check_path.format(**img_vars), mode='r') as fid:
-            img_hashes = json.load(fid)
+        with open(check_path.format(**vid_vars), mode='r') as fid:
+            vid_hashes = json.load(fid)
     except FileNotFoundError:
-        img_hashes = dict()
+        vid_hashes = dict()
 
-    img_hashes[img_hash] = output_path
-    with open(check_path.format(**img_vars), mode='w') as fid:
-        json.dump(img_hashes, fid)
+    vid_hashes[vid_hash] = output_path
+    with open(check_path.format(**vid_vars), mode='w') as fid:
+        json.dump(vid_hashes, fid)
 
 
 def get_date_vars(date, suffix=''):
@@ -172,7 +147,7 @@ def convert_to_filename(s):
     return s.lower().strip().replace(' ', '_').replace('\x00', '')
 
 
-def get_original_image_name(path, date):
+def get_original_video_name(path, date):
     base_re = re.search(r'(dsc|img|sam)_?\d{4}.jpe?g', path, flags=re.IGNORECASE)
 
     if base_re is None:
