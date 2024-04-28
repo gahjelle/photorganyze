@@ -12,8 +12,8 @@ HANDLERS = dict(
 
 
 def store(path):
-    mimetype = magic.from_file(path, mime=True).split('/')[0]
-    print('|- {} ({})'.format(os.path.basename(path), mimetype), end=' ')
+    mimetype = magic.from_file(path, mime=True).split("/")[0]
+    print("|- {} ({})".format(os.path.basename(path), mimetype), end=" ")
 
     if mimetype in HANDLERS:
         return HANDLERS[mimetype](path)

@@ -1,20 +1,24 @@
 """Access the photorganyze configuration file.
 
 """
-from configparser import ConfigParser, ExtendedInterpolation
-from functools import wraps
+
 import os.path
 import sys
+from configparser import ConfigParser, ExtendedInterpolation
+from functools import wraps
 
 ## Base directory of the Photorganyze installation
-_BASE_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__),
-                                          '..', '..'))
+_BASE_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 
 ## Prioritized list of Photorganyze config filenames
-_CONFIG_FILENAMES = ('photorganyze.conf', 'photorganyze_local.conf')
+_CONFIG_FILENAMES = ("photorganyze.conf", "photorganyze_local.conf")
 
 ## Possible locations of Photorganyze config files
-_CONFIG_LOCATIONS = ('.', os.path.expanduser('~'), os.path.join(_BASE_DIR, 'config'))
+_CONFIG_LOCATIONS = (
+    ".",
+    os.path.join(os.path.expanduser("~"), "photorganyze", "config"),
+    os.path.join(_BASE_DIR, "lib"),
+)
 
 ## Photorganyze configuration as a ConfigParser, loaded when needed
 _CONFIG = ConfigParser(interpolation=ExtendedInterpolation())
@@ -29,6 +33,7 @@ def ensure_config(func):
     Returns:
         function: Decorated function that ensures that config is loaded before executing.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         if not _CONFIG.sections():
@@ -63,19 +68,22 @@ def get_list(key, section, fallback=None, cfg=_CONFIG):
     config_str = get(key, section, fallback=None, cfg=cfg)
     if config_str is None:
         return fallback
-    return config_str.replace(',', ' ').split()
+    return config_str.replace(",", " ").split()
+
 
 @ensure_config
 def get_tuple(key, section, fallback=None, cfg=_CONFIG):
     return tuple(get_list(key, section, fallback=fallback, cfg=cfg))
 
+
 @ensure_config
-def get_path(key, section, fallback='', cfg=_CONFIG, **vars_):
+def get_path(key, section, fallback="", cfg=_CONFIG, **vars_):
     path = get(key, section, fallback=fallback, cfg=cfg)
-    if path and '~' in path:
+    if path and "~" in path:
         path = os.path.expanduser(path)
 
     return path
+
 
 @ensure_config
 def get_sections(cfg=_CONFIG):
@@ -83,8 +91,7 @@ def get_sections(cfg=_CONFIG):
 
 
 def load_config():
-    """Load configuration from config-files.
-    """
+    """Load configuration from config-files."""
     for config_path in _config_paths():
         _CONFIG.read(config_path)
 

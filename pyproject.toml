@@ -1,0 +1,26 @@
+[build-system]
+requires      = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name            = "photorganyze"
+authors         = [{ name = "Geir Arne Hjelle", email = "geirarne@gmail.com" }]
+description     = "Photo organizing tool"
+readme          = "DESCRIPTION.rst"
+requires-python = ">=3.8"
+keywords        = ["photo", "backup", "archive"]
+# license = { text = "BSD-3-Clause" }
+classifiers = [
+    'Development Status :: 2 - Pre-Alpha',
+    'Intended Audience :: Science/Research',
+    'Topic :: Scientific/Engineering',
+    'License :: Other/Proprietary License',
+    'Programming Language :: Python :: 3',
+]
+dependencies = ["pillow", "python-magic"]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+
+[project.scripts]
+photorganyze = "photorganyze.__main__:main"

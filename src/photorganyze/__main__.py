@@ -5,18 +5,18 @@ import sys
 
 # Photorganyze imports
 from photorganyze.lib import config
-from photorganyze import file
+from photorganyze import photo
 from photorganyze.lib import util
 
 
 def organyze(*directories):
     for directory in directories:
-        print('+ ', directory)
+        print("+ ", directory)
 
         try:
             paths = sorted(os.listdir(directory))
         except FileNotFoundError:
-            print('   Directory {} is not found'.format(directory))
+            print("   Directory {} is not found".format(directory))
             continue
 
         for path in paths:
@@ -25,10 +25,12 @@ def organyze(*directories):
                 organyze(full_path)
             else:
                 try:
-                    file.store(full_path)
+                    photo.store(full_path)
                 except StopIteration:
-                    print('-> ERROR')
-                    util.get_logger().exception('Error working with {}'.format(full_path))
+                    print("-> ERROR")
+                    util.get_logger().exception(
+                        "Error working with {}".format(full_path)
+                    )
 
 
 def _normalize_path(path):
@@ -39,16 +41,16 @@ def _normalize_path(path):
 
 def main():
     util.start_logging()
-    args = [a for a in sys.argv[1:] if not a.startswith('-')]
-    options = [o for o in sys.argv[1:] if o.startswith('-')]
+    args = [a for a in sys.argv[1:] if not a.startswith("-")]
+    options = [o for o in sys.argv[1:] if o.startswith("-")]
 
     if args:
         input_dirs = tuple(args)
     else:
-        input_dirs = config.get_tuple('default_directories', 'input')
+        input_dirs = config.get_tuple("default_directories", "input")
 
     organyze(*(_normalize_path(d) for d in input_dirs))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

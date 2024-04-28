@@ -10,11 +10,10 @@ options including --help are done.
 
 # Standard library imports
 import atexit
-from datetime import datetime
 import logging
 import os.path
-import re
 import sys
+from datetime import datetime
 
 # Photorganyze imports
 from photorganyze.lib import config
@@ -29,8 +28,8 @@ def runtime():
 
     Calculates the running time of the script and logs it.
     """
-    print('Finish {} in {} seconds'.format(get_program_name(), (datetime.now() - _STARTTIME).total_seconds()))
-
+    runtime = (datetime.now() - _STARTTIME).total_seconds()
+    print(f"Finish {get_program_name()} in {runtime} seconds")
 
 
 def get_program_name():
@@ -40,7 +39,7 @@ def get_program_name():
         String trying to be similar to how the user called the program.
     """
     program_name = sys.argv[0]
-    if not program_name.startswith('./'):
+    if not program_name.startswith("./"):
         program_name = os.path.basename(program_name)
     return program_name
 
@@ -57,18 +56,20 @@ def get_option(key):
     Returns:
         String: The value of the option. None if the option is not specified.
     """
-    args = [o for o in sys.argv if o.startswith(key + '=')]
+    args = [o for o in sys.argv if o.startswith(key + "=")]
 
     if args:
-        return args[-1].split('=', maxsplit=1)[-1]
+        return args[-1].split("=", maxsplit=1)[-1]
     else:
         return None
 
+
 def start_logging():
     logger = logging.getLogger(get_program_name())
-    print(config.get_path('file_name', 'log'))
-    file_handler = logging.FileHandler(config.get_path('file_name', 'log'))
-    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    file_handler = logging.FileHandler(config.get_path("file_name", "log"))
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    )
     logger.addHandler(file_handler)
 
 
